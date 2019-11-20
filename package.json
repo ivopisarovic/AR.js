@@ -1,12 +1,11 @@
 {
-  "name": "ar.js",
-  "version": "2.0.8",
-  "description": "Efficient Augmented Reality for the Web",
-  "main": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "make minify"
+  "author": {
+    "name": "jerome.etienne@gmail.com"
   },
+  "bugs": {
+    "url": "https://github.com/jeromeetienne/AR.js/issues"
+  },
+  "description": "Efficient Augmented Reality for the Web",
   "files": [
     "three.js/build",
     "aframe/build",
@@ -16,10 +15,7 @@
     "aframe/examples/basic.html",
     "aframe/examples/vendor/aframe/build/aframe.min.js"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jeromeetienne/AR.js.git"
-  },
+  "homepage": "https://github.com/jeromeetienne/AR.js#readme",
   "keywords": [
     "AR",
     "VR",
@@ -28,10 +24,19 @@
     "augmented reality",
     "location based"
   ],
-  "author": "jerome.etienne@gmail.com",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/jeromeetienne/AR.js/issues"
+  "main": "three.js/build/ar.js",
+  "name": "ar.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeromeetienne/AR.js.git"
   },
-  "homepage": "https://github.com/jeromeetienne/AR.js#readme"
+  "scripts": {
+    "build": "make minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "2.0.8",
+  "dependencies": {
+    "three": "0.110.0"
+  }
 }
