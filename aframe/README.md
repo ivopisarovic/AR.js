@@ -33,13 +33,13 @@ cameraTransform would fit well a room-scale setup, with *multiple markers connec
 modelView is able to provide multiple *independent* markers.
 
 ```html
-        <!-- add artoolkit into your scene -->
-        <a-scene artoolkit>
-        <!-- define your scene as usual -->
-        <a-box></a-box>
-        <!-- define a camera inside the <a-marker-camera> -->
-        <a-marker-camera preset='hiro'><a-marker-camera>
-        </a-scene>
+<!-- add artoolkit into your scene -->
+<a-scene artoolkit>
+<!-- define your scene as usual -->
+<a-box></a-box>
+<!-- define a camera inside the <a-marker-camera> -->
+<a-marker-camera preset='hiro'><a-marker-camera>
+</a-scene>
 ```
 
 ## Location Based
@@ -69,13 +69,17 @@ In addition to that, as you can see on the example above, we also have to add `r
 | alert     | Whether to show a message when GPS signal is under the `positionMinAccuracy`                  | false |                                                                                                                                                                        | true          |
 | positionMinAccuracy        | Minimum accuracy allowed for position signal    | 100 |
 | minDistance        | If set, places with a distance from the user lower than this value, are not showed. Only a positive value is allowed. Value is in meters.    | 0 (disabled) |
+| simulateLatitude   | Setting this allows you to simulate the latitude of the camera, to aid in testing.    | 0 (disabled) |
+| simulateLongitude   | Setting this allows you to simulate the longitude of the camera, to aid in testing.    | 0 (disabled) |
+| simulateAltitude   | Setting this allows you to simulate the altitude of the camera in meters above sea level, to aid in testing.    | 0 (disabled) |
+
 
 ### `gps-entity-place`
 
 **Required**: yes
 **Max allowed per scene**: no limit
 
-This component makes every entity GPS-trackable. It assignes a specific world position to the entity, so the user can see it when their phone is pointing to its position in the real world. If user is far from the entity, their will see it smaller. If it is too far, their will not see it at all.
+This component makes each entity GPS-trackable. This assigns a specific world position to an entity, so that the user can see it when their device is pointing to its position in the real world. If the user is far from the entity, it will seem smaller. If it's too far away, it won't be seen at all.
 
 It requires latitude and longitude as a single string parameter (example with `a-box` aframe primitive):
 
@@ -83,19 +87,36 @@ It requires latitude and longitude as a single string parameter (example with `a
 <a-box color="yellow" gps-entity-place="latitude: <your-latitude>; longitude: <your-longitude>"/>
 ```
 
-### `gps-camera-debug`
+In addition, you can use the a-frame "position" parameter to assign a y-value or altitude to the entity.  This value should be entered in meters above or below sea level. For example, this would assign a height of 300 meters above sea level, and will be displayed relative to the gps-camera's current altitude:
+
+```HTML
+<a-box color="yellow" gps-entity-place="latitude: <your-latitude>; longitude: <your-longitude>" position="0 300 0"/>
+```
+
+
+
+| Custom Attribute   | Description | Default Value |
+|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| distance        | Distance from user, updated at every user position update. Value in meters.   | 0 |
+| distanceMsg        | Distance from user, updated at every user position update. Value as `<distance> meters/kilometers`.   | '' |
+
+### `gps-camera-debug` [deprecated, may not work]
 
 **Required**: no
 **Max allowed per scene**: 1
 
-This component has to be added only in development environments, not production ones.
+This component should only be added in development environments, not in production environments.
 It shows a debug UI with camera informations and a list of registered `gps-entity-place` entities, showing also distance from the user for each one.
-
-It has to be added to the `a-scene`:
 
 ```HTML
 <a-scene gps-camera-debug embedded arjs='sourceType: webcam; debugUIEnabled: false;'></a-scene>
 ```
+
+## Tips
+
+### **Content that will always face the user**
+
+Look at [this example](./examples/always-face-user/index.html) in order to create `gps-entity-place` entities that will always face the user (so the user camera).
 
 ## Location Based Support
 

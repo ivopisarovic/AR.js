@@ -16,12 +16,6 @@ AFRAME.registerSystem('arjs', {
             type: 'string',
             default: 'default',
         },
-
-        tangoPointCloudEnabled: {
-            type: 'boolean',
-            default: false,
-        },
-
         // old parameters
         debug: {
             type: 'boolean',
@@ -38,6 +32,10 @@ AFRAME.registerSystem('arjs', {
         patternRatio: {
             type: 'number',
             default: -1,
+        },
+        labelingMode: {
+            type: 'string',
+            default: '',
         },
         cameraParametersUrl: {
             type: 'string',
@@ -114,6 +112,7 @@ AFRAME.registerSystem('arjs', {
         if (this.data.detectionMode !== '') arProfile.contextParameters.detectionMode = this.data.detectionMode
         if (this.data.matrixCodeType !== '') arProfile.contextParameters.matrixCodeType = this.data.matrixCodeType
         if (this.data.patternRatio !== -1) arProfile.contextParameters.patternRatio = this.data.patternRatio
+        if (this.data.labelingMode !== '') arProfile.contextParameters.labelingMode = this.data.labelingMode
         if (this.data.cameraParametersUrl !== '') arProfile.contextParameters.cameraParametersUrl = this.data.cameraParametersUrl
         if (this.data.maxDetectionRate !== -1) arProfile.contextParameters.maxDetectionRate = this.data.maxDetectionRate
         if (this.data.canvasWidth !== -1) arProfile.contextParameters.canvasWidth = this.data.canvasWidth
@@ -156,52 +155,13 @@ AFRAME.registerSystem('arjs', {
             })
 
             //////////////////////////////////////////////////////////////////////////////
-            //		tango specifics - _tangoPointCloud
-            //////////////////////////////////////////////////////////////////////////////
-
-            _this._tangoPointCloud = null
-            if (arProfile.contextParameters.trackingBackend === 'tango' && _this.data.tangoPointCloudEnabled) {
-                // init tangoPointCloud
-                var tangoPointCloud = _this._tangoPointCloud = new ARjs.TangoPointCloud(arSession)
-                scene.add(tangoPointCloud.object3d)
-            }
-
-            //////////////////////////////////////////////////////////////////////////////
-            //		tango specifics - _tangoVideoMesh
-            //////////////////////////////////////////////////////////////////////////////
-
-            _this._tangoVideoMesh = null
-            if (arProfile.contextParameters.trackingBackend === 'tango') {
-                // init tangoVideoMesh
-                var tangoVideoMesh = _this._tangoVideoMesh = new ARjs.TangoVideoMesh(arSession)
-
-                // override renderer.render to render tangoVideoMesh
-                var rendererRenderFct = renderer.render;
-                renderer.render = function customRender(scene, camera, renderTarget, forceClear) {
-                    renderer.autoClear = false;
-                    // clear it all
-                    renderer.clear()
-                    // render tangoVideoMesh
-                    if (arProfile.contextParameters.trackingBackend === 'tango') {
-                        // FIXME fails on three.js r84
-                        // render sceneOrtho
-                        rendererRenderFct.call(renderer, tangoVideoMesh._sceneOrtho, tangoVideoMesh._cameraOrtho, renderTarget, forceClear)
-                        // Render the perspective scene
-                        renderer.clearDepth()
-                    }
-                    // render 3d scene
-                    rendererRenderFct.call(renderer, scene, camera, renderTarget, forceClear);
-                }
-            }
-
-            //////////////////////////////////////////////////////////////////////////////
             //		Code Separator
             //////////////////////////////////////////////////////////////////////////////
 
             _this.isReady = true
 
             //////////////////////////////////////////////////////////////////////////////
-            //		awefull resize trick
+            //		awful resize trick
             //////////////////////////////////////////////////////////////////////////////
             // KLUDGE
             window.addEventListener('resize', onResize)
@@ -267,8 +227,6 @@ AFRAME.registerSystem('arjs', {
 
         // update arSession
         this._arSession.update()
-
-        if (_this._tangoVideoMesh !== null) _this._tangoVideoMesh.update()
 
         // copy projection matrix to camera
         this._arSession.onResize()

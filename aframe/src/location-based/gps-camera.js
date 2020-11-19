@@ -4,8 +4,19 @@ AFRAME.registerComponent('gps-camera', {
     currentCoords: null,
     lookControls: null,
     heading: null,
-
     schema: {
+        simulateLatitude: {
+            type: 'number',
+            default: 0,
+        },
+        simulateLongitude: {
+            type: 'number',
+            default: 0,
+        },
+        simulateAltitude: {
+            type: 'number',
+            default: 0,
+        },
         positionMinAccuracy: {
             type: 'int',
             default: 100,
@@ -17,7 +28,7 @@ AFRAME.registerComponent('gps-camera', {
         minDistance: {
             type: 'int',
             default: 0,
-        },
+        }
     },
 
     init: function () {
@@ -29,13 +40,15 @@ AFRAME.registerComponent('gps-camera', {
         this.loader.classList.add('arjs-loader');
         document.body.appendChild(this.loader);
 
-        window.addEventListener('gps-entity-place-added', function() {
+        window.addEventListener('gps-entity-place-added', function () {
             // if places are added after camera initialization is finished
             if (this.originCoords) {
                 window.dispatchEvent(new CustomEvent('gps-camera-origin-coord-set'));
                 console.debug('gps-camera-origin-coord-set');
             }
-            document.body.removeChild(this.loader)
+            if (this.loader && this.loader.parentElement) {
+                document.body.removeChild(this.loader)
+            }
         }.bind(this));
 
         this.lookControls = this.el.components['look-controls'];
@@ -48,15 +61,15 @@ AFRAME.registerComponent('gps-camera', {
         if (!!navigator.userAgent.match(/Version\/[\d.]+.*Safari/)) {
             // iOS 13+
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                var handler = function() {
+                var handler = function () {
                     console.log('Requesting device orientation permissions...')
                     DeviceOrientationEvent.requestPermission();
                     document.removeEventListener('touchend', handler);
                 };
 
-                document.addEventListener('touchend', function() { handler() }, false);
+                document.addEventListener('touchend', function () { handler() }, false);
 
-                alert('After camera permission prompt, please tap the screen to active geolocation.');
+                alert('After camera permission prompt, please tap the screen to activate geolocation.');
             } else {
                 var timeout = setTimeout(function () {
                     alert('Please enable device orientation in Settings > Safari > Motion & Orientation Access.')
@@ -70,7 +83,18 @@ AFRAME.registerComponent('gps-camera', {
         window.addEventListener(eventName, this._onDeviceOrientation, false);
 
         this._watchPositionId = this._initWatchGPS(function (position) {
-            this.currentCoords = position.coords;
+            if(this.data.simulateLatitude !== 0 && this.data.simulateLongitude !== 0) {
+                localPosition = Object.assign({}, position.coords);
+                localPosition.longitude = this.data.simulateLongitude;
+                localPosition.latitude = this.data.simulateLatitude;
+                localPosition.altitude = this.data.simulateAltitude;
+                this.currentCoords = localPosition;
+            }
+            else {
+                this.currentCoords = position.coords;
+            }
+
+
             this._updatePosition();
         }.bind(this));
     },
@@ -184,7 +208,7 @@ AFRAME.registerComponent('gps-camera', {
             this._setPosition();
         }
     },
-    _setPosition: function() {
+    _setPosition: function () {
         var position = this.el.getAttribute('position');
 
         // compute position.x
@@ -192,6 +216,7 @@ AFRAME.registerComponent('gps-camera', {
             longitude: this.currentCoords.longitude,
             latitude: this.originCoords.latitude,
         };
+
         position.x = this.computeDistanceMeters(this.originCoords, dstCoords);
         position.x *= this.currentCoords.longitude > this.originCoords.longitude ? 1 : -1;
 
@@ -200,11 +225,15 @@ AFRAME.registerComponent('gps-camera', {
             longitude: this.originCoords.longitude,
             latitude: this.currentCoords.latitude,
         }
+
         position.z = this.computeDistanceMeters(this.originCoords, dstCoords);
         position.z *= this.currentCoords.latitude > this.originCoords.latitude ? -1 : 1;
 
         // update position
         this.el.setAttribute('position', position);
+
+
+        window.dispatchEvent(new CustomEvent('gps-camera-update-position', { detail: { position: this.currentCoords, origin: this.originCoords }}));
     },
     /**
      * Returns distance in meters between source and destination inputs.
@@ -216,7 +245,7 @@ AFRAME.registerComponent('gps-camera', {
      * @param {Position} dest
      * @param {Boolean} isPlace
      *
-     * @returns {number} distance
+     * @returns {number} distance | Number.MAX_SAFE_INTEGER
      */
     computeDistanceMeters: function (src, dest, isPlace) {
         var dlongitude = THREE.Math.degToRad(dest.longitude - src.longitude);
@@ -227,7 +256,7 @@ AFRAME.registerComponent('gps-camera', {
         var distance = angle * 6378160;
 
         // if function has been called for a place, and if it's too near and a min distance has been set,
-        // set a very high distance to hide the object
+        // return max distance possible - to be handled by the  method caller
         if (isPlace && this.data.minDistance && this.data.minDistance > 0 && distance < this.data.minDistance) {
             return Number.MAX_SAFE_INTEGER;
         }
